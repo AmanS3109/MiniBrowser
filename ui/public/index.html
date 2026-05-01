@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Browser</title>
+  <style>
+    body {
+      font-family: Arial;
+      margin: 20px;
+    }
+
+    input {
+      width: 400px;
+      padding: 6px;
+    }
+
+    button {
+      padding: 6px 10px;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: gray;
+    }
+
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Mini Browser</h2>
+
+  <input id="urlInput" placeholder="Enter URL (e.g. example.com)">
+  <button onclick="fetchPage()">Go</button>
+
+  <div id="status"></div>
+
+  <iframe id="viewer"></iframe>
+
+  <script>
+    async function fetchPage() {
+      let url = document.getElementById("urlInput").value.trim();
+      const status = document.getElementById("status");
+      const viewer = document.getElementById("viewer");
+
+      if (!url) {
+        status.innerText = "Please enter a URL";
+        return;
+      }
+
+      // normalize URL
+      if (!url.startsWith("http")) {
+        url = "https://" + url;
+      }
+
+      // show loading
+      status.innerText = "Loading...";
+      viewer.srcdoc = "";
+
+      try {
+        const res = await fetch("/fetch", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url })
+        });
+
+        const data = await res.json();
+
+        // show status
+        status.innerText = `Status: ${data.status}`;
+
+        // render HTML
+        viewer.srcdoc = data.html || "No content";
+
+      } catch (err) {
+        status.innerText = "Error loading page";
+        viewer.srcdoc = "<h3>Failed to load page</h3>";
+      }
+    }
+
+    // Enter key support
+    document.getElementById("urlInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        fetchPage();
+      }
+    });
+  </script>
+
+</body>
+</html>
